@@ -80,22 +80,51 @@
 
 - **loop和[BX]**
 
-在汇编源程序中：
-	- 数据不能以字母开头（添0）
-	- 指定内存单元地址有两种：
-		- DS:[0]
-		- [BX]  == DS:[BX]
+	在汇编源程序中：
+		- 数据不能以字母开头（添0）
+		- 指定内存单元地址有两种：
+			- DS:[0]
+			- [BX]  == DS:[BX]
 
-DEBUG 中 
+	DEBUG 中 
 
-	G 命令直接执行到指定地址
-	
-	P 命令执行完LOOP
+		G 命令直接执行到指定地址
+		
+		P 命令执行完LOOP
 
-	一般情况 0:200 ~ 0:2ff 没有使用
+		一般情况 0:200 ~ 0:2ff 没有使用
 	
 
 - **CPU实模式和保护模式**
+
+	在新的更大寄存器的CPU出现后。有了**实模式** 和 **保护模式**
+
+	保护模式提供了更安全的CPU管理机制。启动保护模式前，需要准备好 GDT LDT 等。
+
+- **包含多个段的程序**
+	- 在加载程序的时候为程序分配
+	- 在执行的过程向系统申请。
+
+		assume cs:code
+		code segment
+			dw 0123h,0456h,0789h,0abch,0defh,0fedh,0cbah,0987h
+			
+			start:	mov bx,0
+					mov ax,0
+
+					mov cx,8
+				s:	add ax,cs:[bx]
+					add bx,2
+					loop s
+
+					mov ax,4c00h
+					int 21h
+		code ends
+		end start
+
+		// end start 指明程序入口地址。编译后保存到描述信息中。
+		
+
 
 
 
