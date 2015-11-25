@@ -340,9 +340,38 @@
 
 	### 实验九 根据材料编程 
 
-		- **待完成**
+		在屏幕中间分别显示绿色、绿底红色、白底蓝色的字符串'welcome to masm!'
+## 第十章 CALL 和 RET 指令
 
-		在屏幕中间分别显示绿色、绿底红色、白底蓝色的字符串
+	- ret 用栈中的数据，修改 IP 的内容，实现近转移 		[pop IP]
+	- retf 用栈中的数据，修改 CS:IP 的内容，实现远转移	[pop IP pop CS]
+
+	- call ：将当前 IP 或 CS:IP 压入栈中 ==》转移
+
+		call 指令不能实现短转移，除此，call 和 jmp 转移的原理相同。
+
+		- 依据位移进行转移的 call 指令 
+
+			call 标号 == [push IP jmp near ptr 标号]
+
+		- 转移的目的地址在指令中的 call 指令（段间转移）
+
+			call far ptr 标号 == [push CS push IP jmp far ptr 标号]
+		- 转移地址在寄存器中 call
+
+			call 16位reg == [push IP jmp 16位reg]
+		- 转移地址在内存中的 call
+
+			- call word ptr 内存单元地址 ==[push IP jmp word ptr 内存单元地址]
+			- call dword ptr 内存单元地址 == [push CS push IP jmp dword ptr 内存单元地址]
+
+	- call 和 ret 的配合使用 （10.7）
+
+
+
+
+
+
 
 
 
