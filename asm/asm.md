@@ -825,6 +825,7 @@
 				c dw a,b
 			data ends
 
+			若使用 dd 则存 段地址+偏移地址
 			(c dd a,b) == (c dw offseta,seg a,offset b,seg b)
 
 	### 16.3 直接定址表
