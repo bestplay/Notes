@@ -108,7 +108,7 @@
 
 			mov bh,0
 			add bx,bx
-			push part[bx+2]   	; x,y 存在part[2][4]中
+			push part[bx+4]   	; x,y 存在part[4][6]中
 			pop ax
 
 			cmp dl,0
@@ -119,7 +119,7 @@
 			sub ax,10
 		mv1:
 			push ax
-			pop part[bx+2]
+			pop part[bx+4]
 
 			pop dx
 			pop bx
