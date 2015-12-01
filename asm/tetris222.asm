@@ -165,7 +165,99 @@ codesg segment
 			pop ax
 			iret
 
-	checkoverflow1:
+
+	; 备份到 next
+	backpart:
+			push ax
+			mov al,0
+			call copypart
+			pop ax
+			ret
+
+	; 还原到 cpart
+	; 更新到 当前 part
+	updatepart:
+			push ax
+			mov al,1
+			call copypart
+			pop ax
+			ret
+
+	; 拷贝part
+	; 参数 al = 0 当前拷贝到next
+	; 参数 al = 1 next拷贝到当前
+	copypart:
+			push si
+			push di
+			push cx
+			pushf
+			push ax
+
+			cmp al,1
+			je cptoc
+			mov si,cparto
+			mov di,nextparto
+			jmp cpton
+		cptoc:
+			mov di,cparto
+			mov si,nextparto
+		cpton:
+			mov ax,datasg
+			mov ds,ax
+			mov cx,14
+			cld
+			rep movsw 
+
+			pop ax
+			popf
+			pop cx
+			pop di
+			pop si
+			ret
+
+	; 计算绝对坐标
+	; 存放到 nextcabpart 中
+	setpart:
+			push ax
+			push bx
+			push cx
+			push dx
+			push si
+			push di
+
+			mov bx,0
+			mov si,offset nextcrlpart
+			mov di,0
+		getabloop0:
+			mov cx,nextparto
+			mov dx,nextparto+2
+
+			mov ah,0
+			mov al,[bx+si]
+			add cx,ax
+			mov nextcabpart[di],cx
+
+			mov al,[bx+si+1]
+			sub dx,ax
+			mov nextcabpart[di+2],dx
+
+
+			add bx,2
+			add di,4
+			cmp bx,8
+			jnz getabloop0
+
+			; TODO 检测越界
+			call updatepart
+
+			pop di
+			pop si
+			pop dx
+			pop cx
+			pop bx
+			pop ax
+			ret
+
 		
 
 	; TODO
@@ -392,17 +484,21 @@ codesg segment
 
 		ps0:
 			call createpart 
-			mov cx,10
-		ps1:
 			mov al,0  			; 产生新零件
 			call drawpart
 			call delay
 
-			mov al,1  			; 删除旧零件
-			;call drawpart
 
-			call rotate
-			;loop ps1
+			mov al,1  			
+			call drawpart
+
+			call createpart
+			call backpart
+			call updatepart
+
+			call drawpart
+			call delay
+
 
 
 
@@ -501,9 +597,6 @@ codesg segment
 					jnz frotate
 
 
-
-
-
 			pop cx
 			pop si
 			pop dx
@@ -518,6 +611,8 @@ codesg segment
 			push ds
 			push es
 			push bx
+			push cx
+			pushf
 
 			mov bx,7 			; 只有0~6 号形状
 			call random
@@ -539,6 +634,8 @@ codesg segment
 			cld
 			rep movsb  				; 将基本零件形状拷贝到 crlpart 中
 
+			popf
+			pop cx
 			pop bx
 			pop es
 			pop ds

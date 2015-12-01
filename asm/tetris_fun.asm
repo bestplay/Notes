@@ -1,127 +1,96 @@
 
-	; 显示所有颜色
-	listcolour:
-			push dx
-			push cx
+	part dw 0,0
+	cparto dw 0,0					; 当前零件形状  七种,四种变形,x,y 
+	crlpart db 0,0,0,0,0,0,0,0 		; 当前零件盒子相对坐标
+	cabpart dw 0,0,0,0,0,0,0,0 		; 当前零件盒子绝对坐标
+
+
+	nextparto dw 0,0 				; 下一个原点坐标，临时存放
+	nextcrlpart db 0,0,0,0,0,0,0,0 	; 零件盒子下一个相对坐标
+	nextcabpart dw 0,0,0,0,0,0,0,0 	; 零件盒子下一个绝对坐标
+
+
+	; 备份到 next
+	backpart:
 			push ax
-			push bx
-
-			mov dx,2
-	lcdo0:
-			mov cx,2
 			mov al,0
-	lcdo1:
-			mov ah,20 	; 每个颜色画长度8
-	lcdo2:
-			call point
-			inc cx
-			dec ah
-			cmp ah,0
-			jnz lcdo2
-			inc al
-
-			cmp al,16
-			jnz lcdo1
-
-			inc dx
-			cmp dx,22
-			jnz lcdo0
-
-			pop bx
+			call copypart
 			pop ax
-			pop cx
-			pop dx
 			ret
 
+	; 还原到 cpart
+	; 更新到 当前 part
+	updatepart:
+			push ax
+			mov al,1
+			call copypart
+			pop ax
+			ret
 
-	; 顺时针旋转90度
-	rotate:
+	; 拷贝part
+	; 参数 al = 0 当前拷贝到next
+	; 参数 al = 1 next拷贝到当前
+	copypart:
+			push si
+			push di
+			push cx
+			cmp al,1
+			je cptoc
+			mov si,cparto
+			mov di,nextparto
+			jmp cpton
+		cptoc:
+			mov di,cparto
+			mov si,nextparto
+		cpton:
+
+			mov cx,14
+			cld
+			rep movsw 
+			pop cx
+			pop di
+			pop si
+			ret
+
+	; 计算绝对坐标
+	; 存放到 nextcabpart 中
+	setpart:
 			push ax
 			push bx
+			push cx
 			push dx
 			push si
+			push di
 
-			sroting0:
-				;旋转90
-				mov bx,offset part2
-				mov si,0
-			sroting1:
-				mov al,[bx+si]
-				mov ah,[bx+si+1]
-				mov dl,0
-				add dl,ah
-				mov byte ptr [bx+si],dl
-				mov dl,20
-				sub dl,al
-				mov byte ptr [bx+si+1],dl 	; 设置旋转后 x,y
+			mov bx,0
+			mov si,offset nextcrlpart
+			mov di,0
+		getabloop0:
+			mov cx,nextparto
+			mov dx,nextparto+2
 
-				add si,2
-				cmp si,8
-				jnz sroting1
+			mov ah,0
+			mov al,[bx+si]
+			add cx,ax
+			mov nextcabpart[di],cx
+
+			mov al,[bx+si+1]
+			sub dx,ax
+			mov nextcabpart[di+2],dx
 
 
+			add bx,2
+			add di,4
+			cmp bx,8
+			jnz getabloop0
+
+			; TODO 检测越界
+			call updatepart
+
+			pop di
 			pop si
 			pop dx
-			pop bx
-			pop ax
-			ret
-
-
-	; 左移10
-	movel:
-			push bx
-			mov bl,0
-			call move
-			pop bx
-			ret
-
-
-	; 右移10
-	mover:
-			push bx
-			mov bl,1
-			call move
-			pop bx
-			ret
-
-	; 下移10
-	moved:
-			push bx
-			mov bl,3
-			call move
-			pop bx
-			ret
-			
-
-	; 移动 
-	; 参数 bl 0,1,2,3  左右上下
-	; 00 01 10 11
-	move:
-			push ax
-			push bx
-			push dx
-
-			mov dl,bl
-			and dl,00000001b 	; 0表示-10，1表示+10
-			and bl,00000010b 	; 0表示x，1表示y
-			shr bl,1
-
-			mov bh,0
-			add bx,bx
-			push part[bx+4]   	; x,y 存在part[4][6]中
-			pop ax
-
-			cmp dl,0
-			je mv0
-			add ax,10
-			jmp mv1
-		mv0:
-			sub ax,10
-		mv1:
-			push ax
-			pop part[bx+4]
-
-			pop dx
+			pop cx
 			pop bx
 			pop ax
 			ret
