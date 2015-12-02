@@ -13,7 +13,7 @@ datasg segment
 	nextrlpart db 0,0,0,0,0,0,0,0 	; 零件盒子下一个相对坐标
 	nextabpart dw 0,0,0,0,0,0,0,0 	; 零件盒子下一个绝对坐标
 
-	HEIGHTY equ 480 					; 屏幕高度
+	HEIGHTY equ 480 				; 屏幕高度
 	WIDTHX equ 320 					; 屏幕宽度
 	oldint9 dw 0,0					; 原来的int9处理例程地址
 
@@ -70,6 +70,7 @@ codesg segment
 
 			call cls
 			call listcolour
+			call drawsplit
 
 			call play
 
@@ -152,14 +153,8 @@ codesg segment
 			call moved
 			jmp int9ret
 	; 旋转
-	introtate:
-			mov al,1
-			call drawpart
-			
-			call rotate
-
-			mov al,0
-			call drawpart
+	introtate:			
+			call rotateit
 			jmp int9ret
 
 	int9ret:
@@ -233,8 +228,6 @@ codesg segment
 
 	; 返回值： AL=0 成功， AL=1 失败，发生碰撞
 	setpart:
-			push ax
-
 			call getnextabpart
 
 			; TODO 检测越界
@@ -245,7 +238,6 @@ codesg segment
 			call updatepart
 
 		setpartret:
-			pop ax
 			ret
  	
 	; 用next原点，相对坐标，计算绝对坐标，存放到 nextabpart 中
@@ -294,6 +286,7 @@ codesg segment
 			push dx
 			push si
 			push di
+			
 
 			; 获取next绝对坐标
 
@@ -301,11 +294,9 @@ codesg segment
 			mov cx,4
 		ccsloop0:
 
-				mov di,offset cabpart
+				mov di,0
 				mov bx,0
 			ccsloop1:
-
-
 				mov ax,nextabpart[si]
 				cmp ax,cabpart[di] 				; 比较x
 				jne ccsln0
@@ -327,33 +318,36 @@ codesg segment
 
 						mov ax,nextabpart[si]
 						mov dx,nextabpart[si+2]
-						cmp ax,WIDTHX-11
+						cmp ax,WIDTHX-5
 						ja ccsoverflow
 						add ax,10  				; 防止负数
-						cmp ax,10
+						cmp ax,10-5
 						jb ccsoverflow 
 
-						cmp dx,HEIGHTY-1
+						cmp dx,HEIGHTY-5
 						ja ccsoverflow
 						add dx,10 				; 防止负数
-						cmp dx,10
+						cmp dx,10-5
 						jb ccsoverflow 
 
 
 
 						; 检测新坐标是否被占用
 						push cx
-						mov cx,ax
-						add cx,4
-						add dx,4
+						mov cx,nextabpart[si]
+						mov dx,nextabpart[si+2]
+
 						call getcolour
+
 						pop cx
 
-						mov ah,0
-						mov dl,16
-						div dl
-						cmp ah,0
+						cmp al,0
 						jne ccsoverflow
+
+							;cmp al,14
+							;je ccsoverflow
+							;cmp al,9
+							;je ccsoverflow
 
 
 				; ----------- check end
@@ -369,22 +363,6 @@ codesg segment
 			jmp ccsret
 
 		ccsoverflow:
-			; debug-------------------------
-					mov al,14
-					mov dx,200
-					mov cx,200
-					call point
-					inc dx
-					inc cx
-					call point
-					inc dx
-					inc cx
-					call point
-					inc dx
-					inc cx
-					call point
-			; debug-------------------------
-
 			mov al,1
 
 
@@ -395,122 +373,6 @@ codesg segment
 			pop cx
 			pop bx
 			ret
-	; TODO
-	; 检查边界，移动前判断是否可以继续移动
-	; 参数 bl 0,1,2,3  左右上下
-	; 00 01 10 11
-	; 返回值 为 BH=0 可移动。 
-	; 返回值 为 BH=1 达到临界，不可移动。 
-	checkoverflow:
-			push ax
-			push cx
-			push dx
-			push si
-
-			push bx
-			mov ax,datasg
-			mov ds,ax
-
-			; 根据 方向 给出临界值
-			cmp bl,0
-			je cofd0
-			cmp bl,1
-			je cofd1
-			cmp bl,2
-			je cofd2
-			cmp bl,3
-			je cofd3
-
-			cofd0:
-				mov ax,0
-				push ax
-				jmp cofd4
-			cofd1:
-				mov ax,WIDTHX-10
-				push ax
-				jmp cofd4
-			cofd2:
-				mov ax,HEIGHTY+10
-				push ax
-				jmp cofd4
-			cofd3:
-				mov ax,40
-				push ax
-			cofd4:
-
-			mov bh,bl
-			and bh,00000001b 	; 0表示-10，1表示+10 	即： 左下 最小/右上 最大
-			and bl,00000010b 	; 0表示x，1表示y  	即： 左右x/上下y
-			shr bl,1
-
-			; 根据方向判断取x还是y
-
-			mov si,offset crlpart
-			cmp bl,0
-			je cof0
-				inc si 				; 设置起始坐标为 x / y
-				push part[6]  		; 保存零件起点y
-				jmp cof1
-		cof0:
-			push part[4]
-		cof1:
-
-
-			; 根据方向判断取最大最小值的方式
-			cmp bh,0
-			je cof2
-				mov ax,0
-				jmp cof3
-		cof2:
-			mov ax,0ffffh
-		cof3:
-
-
-			; 根据方向算出 crlpart 中所有点中的最值，存放到 al 中
-			mov cx,4
-		cofloop:
-
-			mov dl,[si]
-
-			cmp bh,0
-			je overflowabove0
-				cmp al,dl
-				jb overflowabove
-				jmp overflowless0
-			overflowabove0:
-				cmp al,dl
-				ja overflowabove
-			overflowless0:
-					jmp overflowless
-				overflowabove:
-					mov al,dl
-				overflowless:
-
-			add si,2
-			loop cofloop
-
-			mov ah,0
-
-			pop dx 				; 取出 起点相对坐标 X 或 Y
-			add ax,dx
-			pop dx  			; 取出 临界值
-
-
-			pop bx 				; 回复 bx 是值
-			cmp ax,dx
-			je cofend0
-				mov bh,0
-				jmp cofend1
-			cofend0:
-				mov bh,1 		; 已达到临界值，不可移动
-			cofend1:
-
-			pop si
-			pop dx
-			pop cx
-			pop ax
-			ret
-
 
 	; 左移10
 	movel:
@@ -541,6 +403,10 @@ codesg segment
 			push bx
 			mov bl,2
 			call move
+			cmp dl,1 	; 下移到底，创建新的零件
+			jne movedend
+			call createpart
+			movedend:
 			pop bx
 			ret
 			
@@ -548,8 +414,8 @@ codesg segment
 	; 移动 
 	; 参数 bl 0,1,2,3  左右上下
 	; 00 01 10 11
-	; 返回值 为 BH=0 可移动。 
-	; 返回值 为 BH=1 达到临界，不可移动。
+	; 返回值 为 DL=0 可移动。 
+	; 返回值 为 DL=1 达到临界，不可移动。
 	move:
 				; 检查边界值
 				;call checkoverflow
@@ -557,7 +423,6 @@ codesg segment
 				;je mvend
 
 			push ax
-			push dx
 			push bx
 
 			call backpart 		; 备份当前
@@ -597,12 +462,12 @@ codesg segment
 
 			; 显示新图形
 			call setpart
+			mov dl,al
 
 			mov al,0
 			call drawpart
 
 			pop bx
-			pop dx
 			pop ax
 
 		mvend:
@@ -620,15 +485,16 @@ codesg segment
 			mov ax,datasg
 			mov ds,ax
 
-		ps0:
 			call createpart 
 			mov al,0  			; 产生新零件
-
-			call backpart
-			call updatepart
 			call drawpart
 			
+
+			; 主循环
+		mainloop0:
+			call moved
 			call delay
+			jmp mainloop0
 
 			pop ds
 			pop cx
@@ -640,15 +506,13 @@ codesg segment
 	; 旋转90度，并显示
 	rotateit:
 		push ax
-			; 检查边界值
-			;call checkoverflow
-			;cmp bh,1
-			;je mvend
+
+		mov al,1
+		call drawpart
 
 		call rotate
 		mov al,0
 		call drawpart
-		call delay
 
 		pop ax
 
@@ -726,8 +590,8 @@ codesg segment
 					mov ax,[1+di]
 					mov dh,0
 					mov dl,ch
+					add ax,10 		;y最小为10
 					sub ax,dx
-					add ax,10
 					mov [1+di],ax 	;y
 
 					add di,2
@@ -755,13 +619,19 @@ codesg segment
 			push bx
 			push cx
 			pushf
+			push ax
 
 			mov bx,7 			; 只有0~6 号形状
 			call random
 			mov word ptr part[0],bx
 
-			mov word ptr cparto[0],140
-			mov word ptr cparto[2],140
+			mov bx,WIDTHX/10 			; 0~310 X 坐标
+			call random
+			mov al,bl
+			mov ah,10
+			mul ah
+			mov word ptr cparto[0],ax
+			mov word ptr cparto[2],0
 
 			mov bx,datasg
 			mov ds,bx
@@ -780,6 +650,7 @@ codesg segment
 			call getnextabpart 			; 计算绝对位置
 			call updatepart 			; 更新到当前
 
+			pop ax
 			popf
 			pop cx
 			pop bx
@@ -793,6 +664,7 @@ codesg segment
 	; 画零件
 	; 参数：零件形状 part, al=0 创建 al=1删除
 	drawpart:
+			cli
 			push ax
 			push bx
 			push cx
@@ -865,6 +737,7 @@ codesg segment
 			pop cx
 			pop si
 			pop bx
+			sti
 
 			ret
 
@@ -889,6 +762,31 @@ codesg segment
 			pop dx
 			pop ax
 			ret
+	; 画分割线
+	drawsplit:
+			push dx
+			push cx
+			push ax
+
+			mov dx,0	
+			mov cx,WIDTHX+1
+			mov al,15
+		dsplitloop0:
+			call point
+			inc dx
+			cmp dx,HEIGHTY
+			jb dsplitloop0
+
+			inc cx
+			cmp cx,WIDTHX+3
+			jb dsplitloop0
+
+			pop ax
+			pop cx
+			pop dx
+			ret
+
+
 
 	; 显示所有颜色
 	listcolour:
@@ -897,12 +795,12 @@ codesg segment
 			push ax
 			push bx
 
-			mov dx,2
+			mov dx,0
 	lcdo0:
-			mov cx,2
+			mov cx,WIDTHX+10
 			mov al,0
 	lcdo1:
-			mov ah,20 	; 每个颜色画长度8
+			mov ah,19 	; 每个颜色画长度8
 	lcdo2:
 			call point
 			inc cx
@@ -915,7 +813,7 @@ codesg segment
 			jnz lcdo1
 
 			inc dx
-			cmp dx,22
+			cmp dx,20
 			jnz lcdo0
 
 			pop bx
@@ -1039,8 +937,9 @@ codesg segment
 			push dx
 			push ax
 
-			mov dx,1000h   ;;循化10000000h次
-			mov ax,10h
+			;mov dx,1000h   ;;循化10000000h次
+			mov dx,1h   ;;循化10000000h次
+			mov ax,2h
 		sd1:	
 			sub dx,1
 			cmp dx,0
