@@ -897,6 +897,35 @@
 
 
 
+						mov ax,nextabpart[si]
+						mov dx,nextabpart[si+2]
+						cmp ax,0
+						jb ccsoverflow 
+						cmp ax,WIDTHX-10
+						ja ccsoverflow
+
+						cmp dx,0
+						jb ccsoverflow 
+						cmp dx,HEIGHTY-10
+						ja ccsoverflow
+
+
+
+						; 检测新坐标是否被占用
+						push cx
+						mov cx,ax
+						add cx,4
+						add dx,4
+						call getcolour
+						pop cx
+
+						mov ah,0
+						mov dl,16
+						div dl
+											mov ah,0
+						cmp ah,0
+						jne ccsoverflow
+
 
 
 
