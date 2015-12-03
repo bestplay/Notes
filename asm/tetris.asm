@@ -13,11 +13,13 @@ datasg segment
 	nextrlpart db 0,0,0,0,0,0,0,0 	; 零件盒子下一个相对坐标
 	nextabpart dw 0,0,0,0,0,0,0,0 	; 零件盒子下一个绝对坐标
 
-	HEIGHTY equ 480 				; 屏幕高度
-	WIDTHX equ 320 					; 屏幕宽度
+	HEIGHTY equ 240 				; 屏幕高度
+	WIDTHX equ 160 					; 屏幕宽度
 	oldint9 dw 0,0					; 原来的int9处理例程地址
 
+	drawflag db 0 					; 画图标志 1表示正在画图
 
+	boxpoint db WIDTHX/10*HEIGHTY/10 dup (1) 	; 屏幕所有盒子点位。1表示有，0表示空。
 
 	part0 db 0,10,0,20,0,30,0,40 	; 4组(x,y)。七种基本零件初始形状
 	part1 db 0,10,0,20,0,30,10,10
@@ -28,6 +30,9 @@ datasg segment
 	part6 db 0,10,10,10,10,20,20,10
 
 	table dw part0,part1,part2,part3,part4,part5,part6
+
+	; 变形动作程序入口表
+	actiontable dw movel,mover,moveu,moved,rotateit
 
 datasg ends
 codesg segment
@@ -107,6 +112,7 @@ codesg segment
 			push ax
 			push bx
 			push es
+			push dx
 
 			in al,60h
 
@@ -119,7 +125,7 @@ codesg segment
 			call dword ptr oldint9[0] 	; 调用原 int9
 
 			cmp al,1
-			je exit
+			je exit 			; ESC 退出
 
 			; 新的int9
 
@@ -134,30 +140,37 @@ codesg segment
 			cmp al,1ch 			; 回车 旋转
 			je introtate
 
-			jmp int9ret
+			jmp int9ret 		; 其他按键直接忽略
 
 	; <- 向左
 	intleft:
-			call movel
-			jmp int9ret
+			mov bx,0
+			jmp int9doorpush
 	; -> 向右
 	intright:
-			call mover
-			jmp int9ret
+			mov bx,2
+			jmp int9doorpush
 	; 向上
-	intup:
-			call moveu
-			jmp int9ret
+	intup:	
+			mov bx,4
+			jmp int9doorpush
 	; 向下
 	intdown:
-			call moved
-			jmp int9ret
+			mov bx,6
+			jmp int9doorpush
 	; 旋转
-	introtate:			
-			call rotateit
-			jmp int9ret
+	introtate:		
+			mov bx,8
+		int9doorpush:
+
+			; 调用相应的 action
+			mov al,drawflag[0]
+			cmp al,1
+			je int9ret					; 正在画图，任务放到队列
+			call word ptr actiontable[bx] 	; 不在画图，直接执行任务
 
 	int9ret:
+			pop dx
 			pop es
 			pop bx
 			pop ax
@@ -374,6 +387,86 @@ codesg segment
 			pop bx
 			ret
 
+	; TODO 删除一行盒子
+	deleteline:
+
+
+				mov bx,20  			; 删除第二十行
+
+				mov si,0
+				dellineloop0:
+					mov boxpoint[si],0
+					inc si
+					cmp si,16
+					
+					jb dellineloop0
+
+
+				; 平移上面的 box
+				mov ax,datasg
+				mov ds,ax
+				mov es,ax
+
+				mov si,
+				mov di,
+
+			ret
+	; 显示所有盒子
+	showallbox:
+			push ax
+			push bx
+			push cx
+			push dx
+			push si
+
+			mov bx,0
+			mov si,0
+			showboxloop0:
+				mov al,boxpoint[si]
+				cmp al,0
+				je showboxnext
+
+				mov ax,si
+				mov ah,10
+				mul ah
+
+				mov cx,ax
+
+				mov al,bl
+				mov ah,10
+				mul ah
+
+				mov dx,ax
+
+				call box
+
+				showboxnext:
+				inc si
+				cmp si,16
+			jb showboxloop0
+
+			mov si,0
+			inc bx
+			cmp bx,24
+			jb showboxloop0
+
+			pop si
+			pop dx
+			pop cx
+			pop bx
+			pop ax
+			ret
+
+	; 保存坐标
+	saveboxpoint:
+			; cabpart
+
+			ret
+	; 检查零件所有行，是否有完整行得分.
+	checkpartline:
+
+			ret
+
 	; 左移10
 	movel:
 			push bx
@@ -405,6 +498,11 @@ codesg segment
 			call move
 			cmp dl,1 	; 下移到底，创建新的零件
 			jne movedend
+			; 保存当前零件盒子坐标到 boxpoint
+			call saveboxpoint
+			; 检查当前零件所有左边所在行是否完整。完整则得分
+			call checkpartline
+			; TODO
 			call createpart
 			movedend:
 			pop bx
@@ -485,16 +583,17 @@ codesg segment
 			mov ax,datasg
 			mov ds,ax
 
-			call createpart 
-			mov al,0  			; 产生新零件
-			call drawpart
+			call showallbox
+			;call createpart 
+			;mov al,0  			; 产生新零件
+			;call drawpart
 			
 
 			; 主循环
 		mainloop0:
-			call moved
-			call delay
-			jmp mainloop0
+			;call moved
+			;call delay
+			;jmp mainloop0
 
 			pop ds
 			pop cx
@@ -660,15 +759,15 @@ codesg segment
 			pop di
 			ret
 
-
 	; 画零件
 	; 参数：零件形状 part, al=0 创建 al=1删除
 	drawpart:
-			cli
 			push ax
 			push bx
 			push cx
 			push dx
+
+			mov byte ptr drawflag[0],1 			; 开启标志
 
 			mov bx,0
 		dp1:
@@ -687,58 +786,11 @@ codesg segment
 			cmp bx,16
 			jnz dp1
 
+			mov byte ptr drawflag[0],0 			; 关闭标志
 			pop dx
 			pop cx
 			pop bx
 			pop ax
-			ret
-
-
-	drawpart1:
-			push bx
-			push si
-			push cx
-			push dx
-			push ax
-
-
-			mov si,offset crlpart
-
-			mov bx,0
-		dp11:
-
-			mov cx,cparto[0]
-			mov dx,cparto[2]
-
-			mov ah,0
-			mov al,[bx+si]
-			add cx,ax
-
-			mov al,[bx+si+1]
-			sub dx,ax
-
-
-			pop ax
-			push ax
-			cmp al,0
-			jne draw1
-			call box
-			jmp draw2
-	draw11:	
-			call delbox
-	draw22:
-			add bx,2
-
-			cmp bx,8
-			jnz dp1
-
-			pop ax
-			pop dx
-			pop cx
-			pop si
-			pop bx
-			sti
-
 			ret
 
 
@@ -938,8 +990,8 @@ codesg segment
 			push ax
 
 			;mov dx,1000h   ;;循化10000000h次
-			mov dx,1h   ;;循化10000000h次
-			mov ax,2h
+			mov dx,10h   ;;循化10000000h次
+			mov ax,8h
 		sd1:	
 			sub dx,1
 			cmp dx,0
