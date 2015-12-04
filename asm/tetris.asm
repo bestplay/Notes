@@ -13,13 +13,15 @@ datasg segment
 	nextrlpart db 0,0,0,0,0,0,0,0 	; 零件盒子下一个相对坐标
 	nextabpart dw 0,0,0,0,0,0,0,0 	; 零件盒子下一个绝对坐标
 
-	HEIGHTY equ 240 				; 屏幕高度
-	WIDTHX equ 160 					; 屏幕宽度
+	;HEIGHTY equ 240 				; 屏幕高度
+	;WIDTHX equ 160 					; 屏幕宽度
+	HEIGHTY equ 480 				; 屏幕高度
+	WIDTHX equ 320 					; 屏幕宽度
 	oldint9 dw 0,0					; 原来的int9处理例程地址
 
 	drawflag db 0 					; 画图标志 1表示正在画图
 
-	boxpoint db WIDTHX/10*HEIGHTY/10 dup (1) 	; 屏幕所有盒子点位。1表示有，0表示空。
+	boxpoint db WIDTHX/10*HEIGHTY/10 dup (0) 	; 屏幕所有盒子点位。1表示有，0表示空
 
 	part0 db 0,10,0,20,0,30,0,40 	; 4组(x,y)。七种基本零件初始形状
 	part1 db 0,10,0,20,0,30,10,10
@@ -76,7 +78,7 @@ codesg segment
 			call cls
 			call listcolour
 			call drawsplit
-
+		startnewgame:
 			call play
 
 			;call getchar
@@ -88,13 +90,46 @@ codesg segment
 
 	; 退出程序，恢复原来的中断
 	exit:
-		push oldint9[0]
-		pop es:[9*4]
-		push oldint9[2]
-		pop es:[9*4+2] 		; 恢复旧的 int9
+			push oldint9[0]
+			pop es:[9*4]
+			push oldint9[2]
+			pop es:[9*4+2] 		; 恢复旧的 int9
 
-		mov ax,4c00h
-		int 21h
+			mov ax,4c00h
+			int 21h
+
+	; 游戏结束
+	gameover:
+		push cx
+		push si
+			mov drawflag[0],1
+			mov cx,3
+			gameoverloop0:
+				call hideallbox
+				call delay
+				call showallbox
+				call delay
+			loop gameoverloop0
+
+			mov si,0
+			mov cx,WIDTHX/10*HEIGHTY/10
+			gameoverloop1:
+				mov byte ptr boxpoint[si],0
+				inc si
+			loop gameoverloop1
+
+
+
+			call checkfullline
+			call showallbox
+			call createpart 
+
+			mov drawflag[0],0
+		pop si
+		pop cx
+		ret 
+
+
 
 	; get char from keyboard
 	getchar:
@@ -271,12 +306,36 @@ codesg segment
 			mov ah,0
 			mov al,[bx+si]
 			add cx,ax
-			mov nextabpart[di],cx
 
 			mov al,[bx+si+1]
 			sub dx,ax
+
+
+				; 检测 坐标是否有效
+
+				cmp cx,WIDTHX-10
+				ja overflowpoint0
+
+				cmp cx,0
+				jb overflowpoint0 
+
+				cmp dx,HEIGHTY-10
+				ja overflowpoint2
+
+				cmp dx,0
+				jb overflowpoint2 
+
+			mov nextabpart[di],cx
 			mov nextabpart[di+2],dx
 
+			jmp overflowpoint1
+
+		overflowpoint0:
+			mov nextabpart[di],0ffffh
+			jmp overflowpoint1
+		overflowpoint2:
+			mov nextabpart[di+2],0ffffh
+		overflowpoint1:
 
 			add bx,2
 			add di,4
@@ -339,9 +398,11 @@ codesg segment
 
 						cmp dx,HEIGHTY-5
 						ja ccsoverflow
-						add dx,10 				; 防止负数
-						cmp dx,10-5
-						jb ccsoverflow 
+						
+
+						;add dx,10 				; 防止负数
+						;cmp dx,10-5
+						;jb ccsoverflow 
 
 
 
@@ -378,7 +439,6 @@ codesg segment
 		ccsoverflow:
 			mov al,1
 
-
 		ccsret:
 			pop di
 			pop si
@@ -387,30 +447,161 @@ codesg segment
 			pop bx
 			ret
 
+	; 检查是否有放满的行，满则得分
+	; 返回值： CL=1 则 表示有改动，需要重新刷新显示
+	checkfullline:
+			push ax
+			push bx
+			;push cx
+			push dx
+			push si
+
+			mov cl,0
+
+			mov bx,0
+			mov si,0
+			mov dx,0
+			checklineloop0:
+
+				mov ax,si
+				mov ah,10
+				mul ah
+
+				;mov cx,ax
+
+				mov al,boxpoint[bx+si]
+				cmp al,0
+				je checklinenextline
+			
+				inc si
+				cmp si,WIDTHX/10
+			jb checklineloop0
+
+				; 检测到放满的行：
+				mov cl,1
+				mov al,dl
+				call deleteline
+
+
+		checklinenextline:
+
+			add bx,WIDTHX/10
+			mov si,0
+			inc dl
+			cmp bx,(HEIGHTY/10)*WIDTHX/10
+			jb checklineloop0
+
+			;call showallbox
+
+			pop si
+			pop dx
+			;pop cx
+			pop bx
+			pop ax
+			ret
+
 	; TODO 删除一行盒子
-	deleteline:
+	;参数 al， 要删除的行数
+	deleteboxline:
+			push ax
+			push bx
+			push si
 
-
-				mov bx,20  			; 删除第二十行
+				mov ah,WIDTHX/10
+				mul ah
+				mov bx,ax 				; 删除行
 
 				mov si,0
 				dellineloop0:
-					mov boxpoint[si],0
+					mov boxpoint[bx+si],0
 					inc si
-					cmp si,16
-					
+					cmp si,WIDTHX/10
 					jb dellineloop0
-
-
-				; 平移上面的 box
-				mov ax,datasg
-				mov ds,ax
-				mov es,ax
-
-				mov si,
-				mov di,
+			pop si
+			pop bx
+			pop ax
 
 			ret
+
+	;参数 al， 要删除的行数
+
+	deleteline:
+			push ax
+			push cx
+			push si
+			push di
+			push ds
+			push es
+
+			call deleteboxline
+
+
+			mov ah,WIDTHX/10
+			mul ah
+			dec ax
+			mov si,offset boxpoint
+			mov cx,ax
+			add si,ax
+			mov di,si
+			add di,WIDTHX/10
+
+			mov ax,datasg
+			mov ds,ax
+			mov es,ax
+
+			std
+			rep movsb
+
+			mov al,0
+			call deleteboxline  		; 删除第一行
+
+			pop es
+			pop ds
+			pop di
+			pop si
+			pop cx
+			pop ax
+
+			ret
+
+	; 显示所有盒子
+	hideallbox:
+			push ax
+			push bx
+			push cx
+			push dx
+			push si
+
+			mov bx,0
+			mov si,0
+			mov dx,0
+			hideboxloop0:
+
+				mov ax,si
+				mov ah,10
+				mul ah
+
+				mov cx,ax
+
+				call delbox
+
+				inc si
+				cmp si,WIDTHX/10
+			jb hideboxloop0
+
+			add bx,WIDTHX/10
+			add dx,10
+			mov si,0
+			cmp bx,(HEIGHTY/10)*WIDTHX/10
+			jb hideboxloop0
+
+			pop si
+			pop dx
+			pop cx
+			pop bx
+			pop ax
+			ret
+
 	; 显示所有盒子
 	showallbox:
 			push ax
@@ -421,10 +612,8 @@ codesg segment
 
 			mov bx,0
 			mov si,0
+			mov dx,0
 			showboxloop0:
-				mov al,boxpoint[si]
-				cmp al,0
-				je showboxnext
 
 				mov ax,si
 				mov ah,10
@@ -432,22 +621,24 @@ codesg segment
 
 				mov cx,ax
 
-				mov al,bl
-				mov ah,10
-				mul ah
-
-				mov dx,ax
+				mov al,boxpoint[bx+si]
+				cmp al,0
+				je showabdel
 
 				call box
+				jmp showboxnext
+			showabdel:
+				call delbox
 
 				showboxnext:
 				inc si
-				cmp si,16
+				cmp si,WIDTHX/10
 			jb showboxloop0
 
+			add bx,WIDTHX/10
+			add dx,10
 			mov si,0
-			inc bx
-			cmp bx,24
+			cmp bx,(HEIGHTY/10)*WIDTHX/10
 			jb showboxloop0
 
 			pop si
@@ -459,12 +650,44 @@ codesg segment
 
 	; 保存坐标
 	saveboxpoint:
-			; cabpart
+			push ax
+			push bx
+			push dx
+			push si
+			push ds
 
-			ret
-	; 检查零件所有行，是否有完整行得分.
-	checkpartline:
+			mov ax,datasg
+			mov ds,ax
 
+			mov si,0
+		saveboxloop:
+			mov ax,cabpart[si]
+			mov bl,10
+			div bl
+			mov dl,al 					; x 存dl
+
+			mov ax,cabpart[si+2]
+			mov bl,10
+			div bl
+			mov dh,al 					; y 存dh
+
+			mov ah,WIDTHX/10
+			mov al,dh
+			mul ah
+			mov dh,0
+			add ax,dx
+			mov bx,ax
+			mov byte ptr boxpoint[bx],1
+
+			add si,4
+			cmp si,16
+			jb saveboxloop
+
+			pop ds
+			pop si
+			pop dx
+			pop bx
+			pop ax
 			ret
 
 	; 左移10
@@ -494,17 +717,53 @@ codesg segment
 	; 下移10
 	moved:
 			push bx
+			push ax
+			push si
+
+			mov dl,0
+
 			mov bl,2
 			call move
 			cmp dl,1 	; 下移到底，创建新的零件
 			jne movedend
-			; 保存当前零件盒子坐标到 boxpoint
-			call saveboxpoint
-			; 检查当前零件所有左边所在行是否完整。完整则得分
-			call checkpartline
+
+			; 若此时已到顶点，则 GAMEOVER
+
+				mov si,0
+			movedloop0:
+				mov ax,cabpart[si+2]
+				cmp ax,0
+				jb movedgameover
+				cmp ax,HEIGHTY-10
+				ja movedgameover
+
+				add si,4
+				cmp si,16
+				jb movedloop0
+
+				
+			jmp movedgoon
+			movedgameover:
+				call gameover
+				jmp movedend
+			movedgoon:
+
+			; 若当前零件原点在最上面，则不保存当前坐标到 boxpoint
+			cmp word ptr cparto[2],0
+			jna movedrefreshed
+				; 保存当前零件盒子坐标到 boxpoint
+				call saveboxpoint
+				call checkfullline
+				cmp cl,1
+				jne movedrefreshed
+				call showallbox
+		movedrefreshed:
 			; TODO
 			call createpart
 			movedend:
+
+			pop si
+			pop ax
 			pop bx
 			ret
 			
@@ -516,7 +775,6 @@ codesg segment
 	; 返回值 为 DL=1 达到临界，不可移动。
 	move:
 				; 检查边界值
-				;call checkoverflow
 				;cmp bh,1
 				;je mvend
 
@@ -572,6 +830,7 @@ codesg segment
 			ret
 
 
+
 	; 播放
 
 	play:
@@ -580,20 +839,13 @@ codesg segment
 			push cx
 			push ds
 
-			mov ax,datasg
-			mov ds,ax
-
-			call showallbox
-			;call createpart 
-			;mov al,0  			; 产生新零件
-			;call drawpart
-			
+			call createpart 
 
 			; 主循环
 		mainloop0:
-			;call moved
-			;call delay
-			;jmp mainloop0
+			call moved
+			call delay
+			jmp mainloop0
 
 			pop ds
 			pop cx
@@ -711,6 +963,7 @@ codesg segment
 
 	; 创建零件
 	createpart:
+			mov drawflag[0],1
 			push di
 			push si
 			push ds
@@ -720,6 +973,7 @@ codesg segment
 			pushf
 			push ax
 
+		createpartstart:
 			mov bx,7 			; 只有0~6 号形状
 			call random
 			mov word ptr part[0],bx
@@ -747,6 +1001,21 @@ codesg segment
 
 			call backpart 				; 备份到next
 			call getnextabpart 			; 计算绝对位置
+
+
+				mov si,0
+
+			createpartloop0:
+
+				mov ax,nextabpart[si]
+				cmp ax,WIDTHX-10
+				ja createpartstart
+
+				add si,4
+				cmp si,16
+				jb createpartloop0
+
+
 			call updatepart 			; 更新到当前
 
 			pop ax
@@ -757,6 +1026,7 @@ codesg segment
 			pop ds
 			pop si
 			pop di
+			mov drawflag[0],0
 			ret
 
 	; 画零件
@@ -829,9 +1099,15 @@ codesg segment
 			cmp dx,HEIGHTY
 			jb dsplitloop0
 
+
+		mov dx,	HEIGHTY
+		mov cx,0
+		mov al,15
+		dsplitloop1:
+			call point
 			inc cx
-			cmp cx,WIDTHX+3
-			jb dsplitloop0
+			cmp cx,WIDTHX+2
+			jb dsplitloop1
 
 			pop ax
 			pop cx
@@ -914,6 +1190,16 @@ codesg segment
 			push ax
 			push dx
 			push cx
+
+				; 检测 坐标是否有效
+
+				cmp cx,0ff00h
+				ja boxend
+
+				cmp dx,0ff00h
+				ja boxend 
+
+
 			mov bh,10
 	ud: 					; 画上下边框
 			mov al,9 		; 边框颜色
@@ -952,6 +1238,7 @@ codesg segment
 			cmp bl,0
 			jnz midd
 
+		boxend:
 			pop cx
 			pop dx
 			pop ax
