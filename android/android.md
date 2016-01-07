@@ -1,4 +1,6 @@
 # Android
+任何开发语言，先走一遍官方的 getting Start
+
 
 ## 第一章
 	Linux Kernel -- Libraries -- Application framework -- Applications
@@ -40,6 +42,66 @@
 		Log.e 	-- error
 
 ## 第二章 活动 Activity
+	
+	### 所有的活动都要再 AndroidManifest.xml 中注册才能生效
+		<activity
+		 android:name=".FirstActivity"
+		 android:label="This is FirstActivity" >
+		 </activity>
+		 ".FirstActivity" == 包名 + ".FirstActivity"
+
+	### 隐藏标题栏，onCreate 中：
+		 	requestWindowFeature(Window.FEATURE_NO_TITLE);
+
+	### 使用 Menu
+		public boolean onCreateOptionsMenu(Menu menu)
+		public boolean onOptionsItemSelected(MenuItem item)
+
+	### 销毁 Acitivity
+
+		finish();
+	### intent 
+
+		+ 显式 Intent 
+				Intent intent = new Intent(FirstActivity.this, SecondActivity.class);
+				startActivity(intent);
+		+ 隐式 Intent
 
 
+		#### 声明活动能响应的 intent
+		 <intent-filter> 
+			 <action android:name="android.intent.action.VIEW" />
+			 <category android:name="android.intent.category.DEFAULT" />
+			 <data android:scheme="http" />
+		 </intent-filter>
+
+		#### 传递消息
+			intent.putExtra("extra_data", data);
+			----
+			Intent intent = getIntent();
+			String data = intent.getStringExtra("extra_data");
+
+			返回数据
+			startActivityForResult(intent, requestCode)
+			----
+			Intent intent = new Intent();
+			intent.putExtra("data_return", "Hello FirstActivity");
+			setResult(RESULT_OK, intent);
+			finish();
+			----
+			@Override
+			protected void onActivityResult(int requestCode, int resultCode, Intent data) {}
+
+	### 活动的生存期
+
+		onCreate()
+		onStart()
+			不可见 --> 可见
+		onResume()
+			处于用户交互状态，Task 栈顶
+		onPause()
+			准备恢复其他活动时，可清理一些占用资源
+		onStop()
+		onDestroy()
+		onRestart()： onStop --> onStart
 
