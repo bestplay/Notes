@@ -105,3 +105,16 @@
 		onDestroy()
 		onRestart()： onStop --> onStart
 
+		#### 活动被回收
+			+ onSaveInstanceState(Bundle bundle) 在回收之前调用，以保存临时数据.在 onCreate(Bundle bundle) 中恢复
+
+	### 活动的启动模式
+		在 AndroidManifest.xml 中 <activity> 指定 android:launchMode 
+
+		+ standard 			可重复启动同一个活动
+		+ singleTop 		若活动在栈顶，则不重新创建
+		+ singleTask
+		+ singleInstance
+
+
+
