@@ -112,9 +112,226 @@
 		在 AndroidManifest.xml 中 <activity> 指定 android:launchMode 
 
 		+ standard 			可重复启动同一个活动
-		+ singleTop 		若活动在栈顶，则不重新创建
-		+ singleTask
-		+ singleInstance
+		+ singleTop 		若活动在栈顶，则不重新创建，
+		+ singleTask 		若活动存在，则不创建
+		+ singleInstance 	新的返回栈实例。
+
+	### 最佳实践
+		#### 获取当前活动名
+
+		public class BaseActivity extends Activity {
+			@Override
+			protected void onCreate(Bundle savedInstanceState) {
+				super.onCreate(savedInstanceState);
+				Log.d("BaseActivity", getClass().getSimpleName());
+			}
+		}
+		#### 随时退出程序
+
+		public class ActivityCollector {
+			public static List<Activity> activities = new ArrayList<Activity>();
+			public static void addActivity(Activity activity) {
+				activities.add(activity);
+			}
+			public static void removeActivity(Activity activity) {
+				activities.remove(activity);
+			}
+			public static void finishAll() {
+				for (Activity activity : activities) {
+					if (!activity.isFinishing()) {
+						activity.finish();
+					}
+				}
+			}
+		}
+
+		#### 将启动活动的方法写到活动类本身
+		public class SecondActivity extends BaseActivity {
+			public static void actionStart(Context context, String data1, String data2) {
+				Intent intent = new Intent(context, SecondActivity.class);
+				intent.putExtra("param1", data1);
+				intent.putExtra("param2", data2);
+				context.startActivity(intent);
+			}
+			……
+		}
+## 第三章 UI 开发
+	### TextView
+
+		<TextView
+			android:id="@+id/text_view"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:gravity="center"
+			android:textSize="24sp"
+			android:textColor="#00ff00"
+			android:text="This is TextView" />
+	### Button
+
+		button = (Button) findViewById(R.id.button);
+		button.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+			// 在此处添加逻辑
+			}
+		});
+
+
+		=============== 或者 
+
+
+		public class MainActivity extends Activity implements OnClickListener {
+			private Button button;
+			@Override
+			protected void onCreate(Bundle savedInstanceState) {
+				super.onCreate(savedInstanceState);
+				setContentView(R.layout.activity_main);
+				button = (Button) findViewById(R.id.button);
+				button.setOnClickListener(this);
+			}
+			@Override
+			public void onClick(View v) {
+				switch (v.getId()) {
+					case R.id.button:
+					// 在此处添加逻辑
+					break;
+					default:
+					break;
+				}
+			}
+		}
+
+	### EditText
+
+		android:hint = "some tips"  Just like "placeholder" in html.
+		android:maxLines="2"
+
+	### ImageView
+
+		android:src="@drawable/ic_launcher"
+		imageView.setImageResource(R.drawable.jelly_bean);
+
+	### ProgressBar (android:visibility)
+
+		+ visible 		View.VISIBLE
+		+ invisible 	View.INVISIBLE
+		+ gone			View.GONE
+
+		"style="?android:attr/progressBarStyleHorizontal"
+		android:max="100"
+	### AlertDialog
+
+		AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
+
+	### ProgressDialog
+		ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
+
+	### 布局
+
+		#### LinearLayout
+			android:orientation=vertical/horizontal
+
+			android:layout_gravity
+			android:gravity
+		#### RelativeLayout
+			相对父亲控件
+			+ android:layout_centerInParent="true"
+			+ android:layout_alignParentRight="true"
+ 			+ android:layout_alignParentTop="true"
+
+ 			相对其他控件
+ 			+ android:layout_above="@id/button3"
+ 			+ android:layout_toLeftOf="@id/button3"
+
+ 		#### FrameLayout
+ 			所有控件都位于左上角。
+
+ 		#### TableLayout
+ 			<TableRow>
+ 				<TextView />
+ 				<Button />
+ 			</TableRow>
+ 		#### 自定义控件
+ 			##### 引入布局
+
+ 				<include layout="@layout/yourlayout" />
+ 			##### 自定义控件
+
+ 				public class TitleLayout extends LinearLayout {
+					public TitleLayout(Context context, AttributeSet attrs) {
+						super(context, attrs);
+						LayoutInflater.from(context).inflate(R.layout.title, this);
+						Button titleBack = (Button) findViewById(R.id.title_back);
+						Button titleEdit = (Button) findViewById(R.id.title_edit);
+						titleBack.setOnClickListener(new OnClickListener() {
+							@Override
+							public void onClick(View v) {
+								((Activity) getContext()).finish();
+							}
+						});
+
+						titleEdit.setOnClickListener(new OnClickListener() {
+							@Override
+							public void onClick(View v) {
+								Toast.makeText(getContext(), "You clicked Edit button",
+								Toast.LENGTH_SHORT).show();
+							}
+						});
+					}
+				}
+
+				<com.example.uicustomviews.TitleLayout
+				 android:layout_width="match_parent"
+				 android:layout_height="wrap_content"
+				 >
+				</com.example.uicustomviews.TitleLayout>
+	### ListView
+
+		+ 允许用户通过手指上下滑动的方式将屏幕外的数据滚动到屏幕内
+
+		+ 通过适配器传入数据
+
+		ArrayAdapter<String> adapter = new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_list_item_1, data);
+		listView.setAdapter(adapter);
+
+		#### 定制 ListView 的界面
+			**未完3.5.2**
+		#### 提升 ListView 的运行效率
+			**未完3.5.3**
+		#### ListView 的点击事件
+			**未完3.5.4**
+
+	### 单位和尺寸
+		float xdpi = getResources().getDisplayMetrics().xdpi;
+		float ydpi = getResources().getDisplayMetrics().ydpi;
+
+		控件单位用 dp
+		字体单位用 sp
+
+	### 编写界面最佳实践
+		#### 制作 Nine-Patch 图片
+
+		#### 编写精美的聊天界面
+			**未完3.7.2**
+
+## 第四章 手机平板，碎片
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
