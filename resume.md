@@ -148,7 +148,7 @@ Thanks for these great companies i have worked for.
 - Do more sports
 
 ----------
-*Ignore the words belove ...*
+*Ignore the words below ...*
 # Why
 
 Why am i talking about these tiny or maybe useless project?
