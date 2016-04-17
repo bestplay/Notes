@@ -44,7 +44,7 @@ I love new tech, love github, keep eyes on AI and love my baby(i got a daughter 
 
   After that it will send all results about this phone to server to get to **assessment price** of it.
 
-  - It communicates with both server and web font end by http/https or websocket.
+  - It communicates with both server and web font end by http/https or websocket(yes, we try **socket.io**).
 
   - It can also talk to Apps installed in Iphones via USB using TCP socket connections(multiple phones model).
 
