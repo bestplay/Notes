@@ -6,6 +6,8 @@ In 2012, i graduated from Chengdu University of Information Technology where i s
 
 I love new tech, love github, keep eyes on AI and love my baby(i got a daughter in 2013 :)).
 
+And i can get familiar with any new tech in a week.
+
 # Experience
 
 ## C/C++
@@ -19,16 +21,18 @@ I love new tech, love github, keep eyes on AI and love my baby(i got a daughter 
 
   Developing websites for both laptop and mobile phones.
 
+  Yes, i tried **Bootstrap**. It is great. Using media query to make responsive websites and be friendly with mobile devices.
+
 ## Back-End web development
 
-  **Now**, i am working for FIH in ChengDu as **Back-End or full stack developer**.
+  **Now**, i am working for FIH(Chengdu)Communication Technology Co.,Ltd as **Back-End or full stack developer**.
 
 #### Web server
 
   Develop and maintain web servers in **nodejs**, and using **PostgreSQL, Redis**.
 
 #### Desktop Client (base on node-webkit)
-  I propose my superior to use **node-webkit** to build Desktop Clients for Recycling Iphones project, instead of outsourcing.
+  I propose my superior to use **node-webkit** to build Desktop Clients for Recycling IPhones project, instead of outsourcing.
 
   And It works.
 
@@ -37,18 +41,24 @@ I love new tech, love github, keep eyes on AI and love my baby(i got a daughter 
   At the same time it will **check updates** from server.
   It will auto down patches and finish update to new version when it restarted just like the way of **Chrome**.
 
-  When an Iphone is added via USB, it will auto **test the hardware status**.
+  When an IPhone is added via USB, it will auto **test the hardware status**.
   And **check FMI and guaranty** from Apple's website.
 
   Then user/operator need to do some visual check.
 
   After that it will send all results about this phone to server to get to **assessment price** of it.
 
-  - It communicates with both server and web font end by http/https or websocket(yes, we try **socket.io**).
+  - It communicates with both server and web font end by http/https or websocket.
 
-  - It can also talk to Apps installed in Iphones via USB using TCP socket connections(multiple phones model).
+    Yes, we tried **socket.io**. Using nodejs's "cluster" with multiple processors, it will get a mess.
 
-    We build an App run in Iphones to provide a TCP server.
+    And i found some workarounds like tracing the session by any identity or using Redis.
+
+    Finally, we dropped it. Because our applications is not necessary to make it Real-time. And HTTP is fine.  
+
+  - It can also talk to Apps installed in IPhones via USB using TCP socket connections(multiple phones model).
+
+    We build an App run in IPhones to provide a TCP server.
 
     And then Node-Webkit Client connect to the TCP server via USB cable with some open source tools.
 
@@ -72,7 +82,7 @@ I love new tech, love github, keep eyes on AI and love my baby(i got a daughter 
 
   - Communicates with Font-End by websocket for reason of separation.
 
-  - Iphone testing (multiple phones model for factory / single model for shop)
+  - IPhones testing (multiple phones model for factory / single model for shop)
 
   - **Print doc and barcode** without using the browser's features.
 
@@ -94,8 +104,15 @@ I love new tech, love github, keep eyes on AI and love my baby(i got a daughter 
 
 #### Tools for workmates
 
-  python sublime text plugin and nodejs command line tool for my workmates to replace hardcode, saved lot of time.
+  **Python** sublime text plugin and nodejs command line tool for my workmates to replace hardcode, saved lot of time.
 
+  In order to make the three-part source code we bought from other company which wrote in PHP to I18N.
+
+  I developed some tools my workmates to replace hardcode.
+
+  Python plugin for sublime text Editor. it can Regex match the hardcode words and auto open the files they located.
+
+  And it will suggest different replacements, like `<?php echo replaced-hardcode ?>` or just `echo` while inner a PHP label.
 
 #### Recently
 
