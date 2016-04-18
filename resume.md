@@ -153,6 +153,8 @@ And i can get familiar with any new tech in a week.
 
   It can play just as the Teris game.
 
+  *Words from the Big-Bang:*
+
   *"Why are you doing this?"*
 
   *"Because we can"*
