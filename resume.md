@@ -29,10 +29,10 @@ And i can get familiar with any new tech in a week.
 
 #### Web server
 
-  Develop and maintain web servers in **nodejs**, and using **PostgreSQL, Redis**.
+  Develop and maintain web servers in **Nodejs**, and using **PostgreSQL, Redis**.
 
 #### Desktop Client (base on node-webkit)
-  I propose my superior to use **node-webkit** to build Desktop Clients for Recycling IPhones project, instead of outsourcing.
+  I propose my superior to use **Node-Webkit** to build Desktop Clients for Recycling IPhones project, instead of outsourcing.
 
   And It works.
 
@@ -50,7 +50,7 @@ And i can get familiar with any new tech in a week.
 
   - It communicates with both server and web font end by http/https or websocket.
 
-    Yes, we tried **socket.io**. Using nodejs's "cluster" with multiple processors, it will get a mess.
+    Yes, we tried **socket.io**. Using Nodejs's "cluster" with multiple processors, it will get a mess.
 
     And i found some workarounds like tracing the session by any identity or using Redis.
 
@@ -133,7 +133,7 @@ And i can get familiar with any new tech in a week.
 
   Developed and deployed a program on my Raspberry Pi in my house.
 
-  To make my home local network dynamic IP address auto update to my DDNS.
+  To make my home's local network dynamic IP address auto update to my DDNS.
 
   So that, i can access my local network from outside.
 
@@ -143,13 +143,19 @@ And i can get familiar with any new tech in a week.
 
 - Proxy
 
-  Build a proxy service in my Raspberry Pi using GAE to break GFW(you don't live in China, you will never understand..)
+  Developed a proxy service in my Raspberry Pi using GAE to break GFW(you don't live in China, you will never understand..).
+
+  This is the free and best solution so far.
+
+  I used [Shadowsocks](https://github.com/shadowsocks/shadowsocks) and pay $5 for [Digitalocean's VPS](https://www.digitalocean.com/) before.
+
+  And cloned Shadowsocks' source code have a look into **Python**.
 
 - Auto refresh resumes
 
   Develop a robot in by Raspberry Pi to auto login 51job dot com and update my resumes.
 
-- develop a Teris game using assembly language (assembly maltreats me thousands of times, i make it as first lover.)
+- develop a Teris game using **Assembly language** (Assembly maltreats me thousands of times, i make it as first lover.)
 
   It can play just as the Teris game.
 
@@ -169,7 +175,7 @@ Thanks for these great companies i have worked for.
 
 # Next
 
-- Improve my English
+- Improve my English  
 - Try Golang
 - Do more sports
 
