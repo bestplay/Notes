@@ -43,10 +43,11 @@ And i can get familiar with any new tech in a week.
   
   Because it's default request timeout is never timeout. (I didn't use three-part modules like [Request](https://github.com/request/request) because of some reason or maybe i missed something)
   
-  You to [set a timeout manually](https://nodejs.org/api/http.html#http_request_settimeout_timeout_callback).
+  You need to [set a timeout manually](https://nodejs.org/api/http.html#http_request_settimeout_timeout_callback).
   
-  And I made a "Request.js" as my request module by myself and it worked very well.
+  And I made a "Request.js" as my request module by myself and it worked very well,
   
+  which can set a proxy, access some websites of Apple and upload files.
   
 
 #### Desktop Client to diagnostics recycling IPhones (base on Node-Webkit)
@@ -107,6 +108,10 @@ And i can get familiar with any new tech in a week.
 
   - IPhones testing (multiple phones model for factory / single model for shop). 
     Using [libimobiledevice](https://github.com/libimobiledevice/libimobiledevice) to diagnostics IPhones.
+
+    And run these tools in Node.js child process. 
+    
+    Also do well with the child processes management. using Tree-kill or Windows comand "taskkill"(I tried both).
 
   - **Print doc and barcode** without using the browser's features.
 
