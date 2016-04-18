@@ -95,6 +95,11 @@ And i can get familiar with any new tech in a week.
     Then send the image file to a printer via my print.exe tool.
 
     print.exe also provide scanning printers. also it is able to choose a printer to print.
+  - Be able to **set proxy for users** in different env.
+
+    In my Node-Webkit Client, there is two parts of code, **Nodejs** code and Font-End code run in browser both need to set proxy in different ways.
+
+    Users can set proxy once and it will work both.
 
 #### Android development
 
@@ -104,7 +109,7 @@ And i can get familiar with any new tech in a week.
 
 #### Tools for workmates
 
-  **Python** sublime text plugin and nodejs command line tool for my workmates to replace hardcode, saved lot of time.
+  **Python** sublime text plugin and Nodejs command line tool for my workmates to replace hardcode, saved lot of time.
 
   In order to make the three-part source code we bought from other company which wrote in PHP to I18N.
 
@@ -117,6 +122,8 @@ And i can get familiar with any new tech in a week.
 #### Recently
 
   Using three-part source code writing in **PHP** (our company bought it) to build a website for India oriented e-commerce platform.
+
+  Access Facebook and twitter by OAuth to login or share links and pictures.
 
   Develop and design API for Font-End in PHP.
 
@@ -144,7 +151,7 @@ And i can get familiar with any new tech in a week.
 
 - develop a Teris game using assembly language (assembly maltreats me thousands of times, i make it as first lover.)
 
-  It can play as Teris game.
+  It can play just as the Teris game.
 
   *"Why are you doing this?"*
 
@@ -179,3 +186,5 @@ What do we live for?
 Who knows..
 
 Em, whatever..
+
+*"Talk is cheap, show me the code."*
