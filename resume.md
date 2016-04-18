@@ -36,17 +36,20 @@ And i can get familiar with any new tech in a week.
 
   And It works.
 
-  When it start, it will start **listening USB** device changes.
+
+  When it start, it will start **listening USB** device changes in a child process.
 
   At the same time it will **check updates** from server.
-  It will auto down patches and finish update to new version when it restarted just like the way of **Chrome**.
+  It will auto download patches and finish update to new version when it restarted just like the way of **Chrome**.
 
   When an IPhone is added via USB, it will auto **test the hardware status**.
   And **check FMI and guaranty** from Apple's website.
 
   Then user/operator need to do some visual check.
 
-  After that it will send all results about this phone to server to get to **assessment price** of it.
+  After that it will send all results about this phone to server to get **assessment price** of it.
+  
+  
 
   - It communicates with both server and web font end by http/https or websocket.
 
@@ -66,7 +69,7 @@ And i can get familiar with any new tech in a week.
 
     Every release installation file is more than 50MB.
 
-    But it can only download less than 200KB files to finish updating an old release to the newest one.
+    But it can only download less than 200KB patches files to finish updating from an old release to the newest one.
 
     To approach that, I used Rsync & Courgette.
 
@@ -74,15 +77,16 @@ And i can get familiar with any new tech in a week.
 
     And I write a launcher for it in **C++**(Windows).
 
-    It will read the recent version's path in a specific file and launch the real program.
+    The launcher will read the recent version's path in a specific file and launch the real program.
 
     Each time it finished update, it will update the path in the file and delete the old release.
 
-  - USB device detection(plug/unplug) wrote in C++.
+  - USB device detection(plug/unplug) wrote in C++ using Windows system API from MSDN.
 
   - Communicates with Font-End by websocket for reason of separation.
 
-  - IPhones testing (multiple phones model for factory / single model for shop)
+  - IPhones testing (multiple phones model for factory / single model for shop). 
+    Using **TODO**
 
   - **Print doc and barcode** without using the browser's features.
 
