@@ -27,26 +27,48 @@ And i can get familiar with any new tech in a week.
 
   **Now**, i am working for FIH(Chengdu)Communication Technology Co.,Ltd as **Back-End or full stack developer**.
 
-#### Web server
+#### Node.js Web server
 
   Develop and maintain web servers in **Nodejs**, and using **PostgreSQL, Redis**.
+  
+  This is my major work. 
+  
+  We use pure Nodejs with some Modules to connect DBs and some light-weight Modules like Async.
+  
+  Yes, I like Node.js better than hate it, even if some times it sucked.
+  
+  There is a thing. 
+  
+  When I using Nodejs to make a HTTP request. It doesn't return anything or throw any error in a bad network.
+  
+  Because it's default request timeout is never timeout. (I didn't use three-part modules like [Request](https://github.com/request/request) because of some reason or maybe i missed something)
+  
+  You need to [set a timeout manually](https://nodejs.org/api/http.html#http_request_settimeout_timeout_callback).
+  
+  And I made a "Request.js" as my request module by myself and it worked very well,
+  
+  which can set a proxy, access some websites of Apple and upload files.
+  
 
-#### Desktop Client (base on node-webkit)
+#### Desktop Client to diagnostics recycling IPhones (base on Node-Webkit)
   I propose my superior to use **Node-Webkit** to build Desktop Clients for Recycling IPhones project, instead of outsourcing.
 
   And It works.
 
-  When it start, it will start **listening USB** device changes.
+
+  When it start, it will start **listening USB** device changes in a child process.
 
   At the same time it will **check updates** from server.
-  It will auto down patches and finish update to new version when it restarted just like the way of **Chrome**.
+  It will auto download patches and finish update to new version when it restarted just like the way of **Chrome**.
 
   When an IPhone is added via USB, it will auto **test the hardware status**.
   And **check FMI and guaranty** from Apple's website.
 
   Then user/operator need to do some visual check.
 
-  After that it will send all results about this phone to server to get to **assessment price** of it.
+  After that it will send all results about this phone to server to get **assessment price** of it.
+  
+  
 
   - It communicates with both server and web font end by http/https or websocket.
 
@@ -66,7 +88,7 @@ And i can get familiar with any new tech in a week.
 
     Every release installation file is more than 50MB.
 
-    But it can only download less than 200KB files to finish updating an old release to the newest one.
+    But it can only download less than 200KB patches files to finish updating from an old release to the newest one.
 
     To approach that, I used Rsync & Courgette.
 
@@ -74,15 +96,22 @@ And i can get familiar with any new tech in a week.
 
     And I write a launcher for it in **C++**(Windows).
 
-    It will read the recent version's path in a specific file and launch the real program.
+    The launcher will read the recent version's path in a specific file and launch the real program.
 
     Each time it finished update, it will update the path in the file and delete the old release.
 
-  - USB device detection(plug/unplug) wrote in C++.
+  - USB device detection(plug/unplug) wrote in C++ using Windows system API from MSDN.
 
   - Communicates with Font-End by websocket for reason of separation.
+    
+    Because we planed to make it deloyed in Raspberry Pi using Nodejs as diagnosticsing server and browser as Client, without Node-Webkit. In order to make a handheld device. And I proved it to be reachable. 
 
-  - IPhones testing (multiple phones model for factory / single model for shop)
+  - IPhones testing (multiple phones model for factory / single model for shop). 
+    Using [libimobiledevice](https://github.com/libimobiledevice/libimobiledevice) to diagnostics IPhones.
+
+    And run these tools in Node.js child process. 
+    
+    Also do well with the child processes management. using Tree-kill or Windows comand "taskkill"(I tried both).
 
   - **Print doc and barcode** without using the browser's features.
 
@@ -131,13 +160,22 @@ And i can get familiar with any new tech in a week.
 
 - DDNS
 
-  Developed and deployed a program on my Raspberry Pi in my house.
-
+  Developed and deployed a program in Node.js on my Raspberry Pi in my house.
+  
   To make my home's local network dynamic IP address auto update to my DDNS.
 
   So that, i can access my local network from outside.
 
   Or use my Proxy Server running on the **Raspberry Pi** anywhere.
+  
+  And while my network router get sucked with too many traffic, 
+  
+  it will try to ping some famous Host like google.com to make sure.
+  
+  Then it will send a Http request to reboot the router.
+ 
+  And it worked like a charm.
+
 
   [Here is the code](https://github.com/bestplay/ddnsAsync)
 
@@ -154,6 +192,12 @@ And i can get familiar with any new tech in a week.
 - Auto refresh resumes
 
   Develop a robot in by Raspberry Pi to auto login 51job dot com and update my resumes.
+  
+  It was write in Nodejs. And it can auto parse the HTTP headers(set-cookies), and save the cookies. 
+  
+  It act just like i login the website with browsers manually.
+  
+  Yes, i know there is a Module like [cookie-parser](https://github.com/expressjs/cookie-parser). But i just can do it, why not.
 
 - develop a Teris game using **Assembly language** (Assembly maltreats me thousands of times, i make it as first lover.)
 
@@ -166,6 +210,7 @@ And i can get familiar with any new tech in a week.
   *"Because we can"*
 
   [Here is the code](https://github.com/bestplay/myprj/blob/master/asm/tetris.asm)
+
 
 
 I have learned so many things in my work. Not only tech skills, but also social skills.
