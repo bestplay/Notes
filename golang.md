@@ -1,214 +1,317 @@
-代理与科学上网
-===============
+Golang 笔记
+============
 
-捋清概念
+## 2.2 基础
 
-从使用工具到编写工具
+### new make 
 
-- http 代理[RFC2616](https://www.ietf.org/rfc/rfc2616.txt)
+new 仅仅分配空间，置零，返回指针
 
-- socks5 代理[RFC1928](https://www.ietf.org/rfc/rfc1928.txt)
+	var i int 
+	&i
+	===>
+	new(int)
 
-	[维基](https://zh.wikipedia.org/wiki/SOCKS)
+make 创建 slice map channel，返回值
 
-- VPN
-
-## Summary
-
-###long long ago…
-
-![enter image description here](http://vc2tea.com/public/upload/whats-shadowsocks-01.png)
-
-### when evil comes
-
-![enter image description here](http://vc2tea.com/public/upload/whats-shadowsocks-02.png)
-
-
-
-### VPN
+### array
 	
-	虚拟私人网络，（全局代理）
+	a := [2]int{1,2}
 
-### GAE GoAgent / XXNET
+	a := [...]int{1,2}
+
+### slice 
+
+	s := []byte{'a','b'}
+
+	s := make([]int,5,10)
+
+### map 
 	
-	http proxy
+	m := make(map[string]int)
 
-### ssh tunnel
+### 返回局部变量
+
+go 中，局部变量在函数返回后仍被使用，则从 Heap 中分配内存，而不是 Stack 中。
+
+### map 不是线程安全，并发时，需要 mutex lock
+
+## 2.3 流程和函数
+
+可以使用 goto 但请小心
+
+break continue 均可配合标号使用
+
+	for k,v := range map{
+		fmt.Println(k,v)
+	}
+
+switch case 类型必须相同，默认自带 break, 使用 fallthrough 强制不跳出
+
+函数可以有多个返回值
+
+变参 func myfunc(arg ...int){}. 其中 arg 是一个 slice
+
+### defer
 	
-	socks5 代理
+多个 defer 按照**逆序**执行
 
-### ShadowSocks 影梭:
+### 函数作为值，类型
 
-	socks5 代理
+type testInt func(int) bool
 
-## 深入（道高一尺魔高一丈）
+func filter(slice []int, f testInt) []int{}
 
-### GFW 监管原理： 
+或者不限定函数类型，将函数作为变量传递。
 
-- IP 封杀 
-- DNS 污染
-- 特征干扰(OpenVPN  ssh，特征明显的 VPN)
+func abc(f func()){}
 
-[XcodeGhost风波](https://zh.wikipedia.org/wiki/XcodeGhost%E9%A3%8E%E6%B3%A2)
+### Panic 和 Recover
 
-[GFW 首要设计师 方滨兴](http://weibo.com/fangbxbupt?is_all=1#1490337194912) 武汉大学被扔鞋
+panic 逐级终止程序，但 defer 正常执行
 
-### 为什么不直接切断
+recover 只能在 defer 中调用，捕获到 panic 的值，并恢复
 
-	从理论上说，审查部门完全可以用技术手段切断所有代理服务器和VPN连接。
+	func throwsPanic(f func()) (b bool) {
+		defer func() {
+			if x := recover(); x != nil {
+				b = true
+			}
+		}()
+		f() //执行函数f，如果f中出现了panic，那么就可以恢复回来
+		return
+	}
 
-	但因为大量的国内外银行金融交易和企业在跨国通讯时，都必须使用安全和经济的VPN来传输加密数据，
+### main 和 init 函数
 
-	出于经济的考量，进行网络审查的国家还不可能完全切断所有的代理连接和VPN连接
+都没有参数和返回值
 
+init 可应用于所有的包。const->var->init()->main()
 
+### import 
 
-### 两类梯子比较： Proxy vs VPN (允许你从另外一个地方访问网络)
+相对路径（不推荐）
+
+绝对路径
+
+省略包名（调用时）
+
+	import(
+		. "fmt" 			// 省略包名
+		ctx "context" 		// 别名
+		_ "mymysql/godrv" 	// 不使用包的函数，而调用 init()
+	)
+
+## 2.4 struct 类型
+
+	type person struct {
+		name string
+		age int
+	}
+
+	var P person
+	P.name = ""
+
+	P := new(person)
+	P := person{age:24, name:"Tom"}
+	P := person{"Tom", 25}
+
+### struct 匿名字段
 	
-- VPN 更安全更慢，底层协议2,3层，操作系统级，捕获所以底层网络流量。经过 VPN server
+	当匿名字段为 struct 时，引入所有字段
+
+	相同字段名，最外层优先
 	
-- Proxy 更快（速度根据加密方式不同），上层协议，应用层，需要每个应用指定代理，且应用支持该代理协议。
+## 2.5 面向对象
+
+附属在类型上的 method (可用于通过 type struct 等自定义的类型)
 	
-	关于 客户端/ 服务端
+	func (r ReceiverType) funcName(parameters) (results)
+
+虽然method的名字一模一样，但是如果接收者不一样，那么method就不一样
+
+method里面可以访问接收者的字段
+
+Receiver 可以传值，或者传指针。(指针可以改变 Receiver 的值)
+
+如果匿名字段实现了 method, 包含它的也可以调用这个 method
+
+重写 method 覆盖(同匿名字段的覆盖)
+
+## 2.6 interface (duck-typing)
+
+任意类型都实现了空 interface (interface{})
+
+	fmt.Println
+
+		type Stringer interface {
+		 String() string
+		}
+
+### 判断类型
+
+Comma-ok 断言
+
+	value, ok = element.(T) 	// element 是 interface 变量
+	value, ok := element.(int)
+
+switch 测试
+
+	switch value := element.(type) {
+		case int:
+			fmt.Printf("list[%d] is an int and its value is %d\n", index, value)
+		case string:
+			fmt.Printf("list[%d] is a string and its value is %s\n", index, value)
+		case Person:
+			fmt.Printf("list[%d] is a Person and its value is %s\n", index, value)
+		default:
+			fmt.Println("list[%d] is of a different type", index)
+	}
+
+### 内嵌 interface (类似struct的匿名字段)
+
+### 反射 reflect (待完善)
+
+	t := reflect.TypeOf(i)    //得到类型的元数据,通过t我们能获取类型定义里面的所有元素
+	v := reflect.ValueOf(i)   //得到实际的值，通过v我们获取存储在里面的值，还可以去改变值
+
+## 2.7 并发 gorouting
+
+	chan T          // 可以接收和发送类型为 T 的数据
+	chan<- float64  // 只可以用来发送 float64 类型的数据
+	<-chan int      // 只可以用来接收 int 类型的数据
+
+### 无缓冲channels
 	
-	每个应用访问网络。使用软件时仅仅是设置代理。
+无缓冲的 channel 发送和接收都是阻塞的，除非另一端已经准备好。(用作同步)
 
-	事实上，应用对于各种代理协议，**需要实现各种代理协议的客户端**(dirty work)。（与代理服务器的握手，确定认证方式等）
-
-### http 
-
-	请求头改为 全路径
-
-### https
+	ci := make(chan int)
+	cs := make(chan string)
+	cf := make(chan interface{})
 	
-	通过 http connect 方法。与服务器建立长连接通道。(GAE 不支持直接 TCP 以及 connect)
+	ch <- v    // 发送v到channel ch.
+	v := <-ch  // 从ch中接收数据，并赋值给v
 
-	RFC2616 超文本传输协议中定义的 
+### Buffered Channels
 
-	curl http://localhost:8124
+	ch:= make(chan bool, 4)
 
-	curl -x localhost:8124 http://localhost:8080
+### Range 和 Close
 
-	curl -x localhost:8124 https://localhost:8080
+	// 像操作 slice / map 一样操作 channel。(直到chan被显式关闭)
+	for i := range ch {
+		fmt.Println(i)
+	}
+
+	// 在生产者的地方 close(chan)，而不是消费的地方
+
+	close 用于没有数据发送，或者显式结束 range 循环
+
+	close 后，不可写入，但可读取剩下的值，直到为空
+
+	v, ok := <-ch 测试channel是否被关闭
+
+### select 
+
+select默认是阻塞的，只有当监听的channel中有发送或接收可以进行时才会运行
+
+	select {
+		case i := <-c:
+			// use i
+		default:
+			// 当c阻塞的时候执行这里
+	}
 
 
+	select {
+		case v := <- c:
+			println(v)
+		case <- time.After(5 * time.Second): 	// 超时
+			println("timeout")
+			o <- true
+			break
+	}
 
-### GAE GoAgent / XXNET
+### runtime goroutine
 
-免费版本仅支持 http 协议，一个邮箱12个 APPID，1G 流量/APPID/天。
-
-自签名证书，(早期安全问题，证书固定)
-
-解包，封包，转发
-
-经过 GFW 时，仅仅是 普通 http 包(body加密)
-
-#### ssl
-	tls handshake
-
-	Client Hello
-
-	Server Hello
-
-	确定协议版本，加密压缩算法，交换证书公钥，验证证书
-
-	加密数据交换
-
-	[那些证书相关的玩意儿(SSL,X.509,PEM,DER,CRT,CER,KEY,CSR,P12等)](http://www.cnblogs.com/guogangj/p/4118605.html)
-
-### socks5
-
-	socks5 的 RFC1928 （socks4 不支持 UDP）
-
-	传递数据包，不关心是何种应用协议
-
-### ssh tunnel 
-
-	创建 socks5 代理
-
-	ssh -D 8080 myhomecomputer 
-
-	![enter image description here](http://vc2tea.com/public/upload/whats-shadowsocks-03.png)
-
-#### Windows
-- SecureCRT 
-- putty
-- xshell
-- powershell
-
-### ShadowSocks 影梭:
+runtime 包中有几个处理 goroutine 的函数
 	
-简单理解的话，shadowsocks 是将原来 ssh 创建的 Socks5 协议拆开成 server 端和 client 端
+	- Goexit 		退出当前goroutine, defer 还会执行
+	- Gosched 		让出CPU
+	- NumCPU
+	- NumGoroutine
+	- GOMAXPROCS
 
-对 localhost 开启一个兼容 socks5 的本地端口。
+## 3.2 搭建 Web 服务
+	func sayhelloName(w http.ResponseWriter, r *http.Request) {}
+	
+	func main() {
+		http.HandleFunc("/", sayhelloName) //设置访问的路由
+		err := http.ListenAndServe(":9090", nil) //设置监听的端口
+		if err != nil {
+			log.Fatal("ListenAndServe: ", err)
+		}
+	}
+## 3.3 http 包
 
-在墙外再设置一个程序。
+- 创建Listen Socket, 监听指定的端口, 等待客户端请求到来。
 
-两个程序之间通过一个 TCP 连接。由本地的程序负责把本地的 proxy 请求都转发到墙外。
+- Listen Socket接受客户端的请求, 得到Client Socket, 接下来通过Client Socket与客户端通信。
 
-ss-local 和 ss-server 两端通过多种可选的加密方法进行通讯，经过 GFW 的时候是常规的TCP包，没有明显的特征码而且 GFW 也无法对通讯数据进行解密
+- 处理客户端的请求, 首先从Client Socket读取HTTP请求的协议头, 如果是POST方法, 还可能要读取客户端提交的数据, 然后交给相应的handler处理请求, handler处理完毕准备好客户端需要的数据, 通过Client Socket写给客户端。
 
-![enter image description here](http://vc2tea.com/public/upload/whats-shadowsocks-04.png)
+## 3.4 http 包详解
 
-[ShadowSocks](https://github.com/shadowsocks/shadowsocks)
+	package main
 
+	import (
+		"fmt"
+		"net/http"
+	)
 
-#### shadowsocks-android
+	type MyMux struct {
+	}
 
-shadowsocks-android
+	func (p *MyMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" {
+			sayhelloName(w, r)
+			return
+		}
+		http.NotFound(w, r)
+		return
+	}
 
-iptables 需要 Root 
+	func sayhelloName(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Hello myroute!")
+	}
 
-[tun2socks （ tun/tap 虚拟网络设备）](https://freevpnssh.info/socks-vpn/)
+	func main() {
+		mux := &MyMux{}
+		http.ListenAndServe(":9090", mux)
+	}
 
-Android 4.0 开始，开放新的API叫**VpnService**，无需ROOT启动VPN，获取 ip 包。
-
-APP==>IP包==>Android VpnService建立的虚拟网卡==>IP包==>我们的代理程序==>TCP连接（socks代理协议）==>socks代理服务器==TCP连接(http）==>目标服务器
-
-#### shadowsocks-ios
-
-APPLE IOS9 开放了 **VPN API**，需要开发者申请权限。trick 同理 Android
-
-[作者研究了一半被请去喝茶了](https://github.com/shadowsocks/shadowsocks-iOS/issues/124)
-
-由此可以推测，GFW 对SS 翻墙束手无策
-
-	On Aug 22, 2015, at 11:17, clowwindy notifications@github.com wrote:
-
-	Two days ago the police came to me and wanted me to stop working on this. Today they asked me to delete all the code from GitHub. I have no choice but to obey.
-
-	I hope one day I'll live in a country where I have freedom to write any code I like without fearing.
-
-	I believe you guys will make great stuff with Network Extensions.
-
-	Cheers!
-
-于是,出现了一堆收费的 IOS 客户端。
-
-
-ios Wingy (￥6)
-
-Shadowrocket (￥18)
-
-Potaso (￥45)
-
-### 推荐自搭建 SS
-
-阿里云 国外节点
-
-[搬瓦工](http://bandwagonhost.com/) （用过）
-
-[digitalOcean](https://www.digitalocean.com/pricing) （用过）
-
-[Linode](https://www.linode.com/pricing)
-
-购买 SS 或者自行搭建（安全）
+## 4 表单
 
 
 
-### 小心跨省
 
-2017年1月22日，工业和信息化部发布[《工业和信息化部关于清理规范互联网网络接入服务市场的通知》](https://zh.wikisource.org/wiki/%E5%B7%A5%E4%B8%9A%E5%92%8C%E4%BF%A1%E6%81%AF%E5%8C%96%E9%83%A8%E5%85%B3%E4%BA%8E%E6%B8%85%E7%90%86%E8%A7%84%E8%8C%83%E4%BA%92%E8%81%94%E7%BD%91%E7%BD%91%E7%BB%9C%E6%8E%A5%E5%85%A5%E6%9C%8D%E5%8A%A1%E5%B8%82%E5%9C%BA%E7%9A%84%E9%80%9A%E7%9F%A5)规定未经电信主管部门（各一级行政区通信管理局）批准，不得自行创建或租用VPN等其他信道开展跨境经营活动。这也意味着中国大陆民众如需要创建VPN，必须获取各一级行政区通信管理局的批准
 
-[翻墙违法](https://www.hk01.com/%E5%85%A9%E5%B2%B8/67339/%E5%85%A7%E5%9C%B0%E5%B7%A5%E4%BF%A1%E9%83%A8%E7%A6%81%E8%87%AA%E8%A1%8C%E5%BB%BA%E7%AB%8B%E6%88%96%E7%A7%9F%E7%94%A8VPN-%E4%B8%8A%E7%B6%B2-%E7%BF%BB%E5%A2%BB-%E5%B0%87%E8%A2%AB%E5%9A%B4%E6%8E%A7)
+
+
+
+
+
+
+
+
+## TODO 
+
+	- GC 
+	- docker
+	- sync
+	- chan
+	- select
+	- .type
+	- 反射 reflect
+	- 线程安全
 
