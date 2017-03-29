@@ -291,9 +291,72 @@ runtime 包中有几个处理 goroutine 的函数
 	}
 
 ## 4 表单
+	
+	func login(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()       //解析url传递的参数，对于POST则解析响应包的主体（request body）
+		fmt.Println("method:", r.Method) //获取请求的方法
+		if r.Method == "GET" {
+			t, _ := template.ParseFiles("login.gtpl")
+			log.Println(t.Execute(w, nil))
+		} else {
+			//请求的是登陆数据，那么执行登陆的逻辑判断
+			fmt.Println("username:", r.Form["username"])
+			fmt.Println("password:", r.Form["password"])
+		}
+	}
 
+### 4.2 验证表单
 
+- 空值：r.Form.Get()
+- 数字：getint,err := strconv.Atoi(r.Form.Get("age"))
 
+	if m, _ := regexp.MatchString("^[0-9]+$", r.Form.Get("age")); !m {
+		return false
+	}
+
+- 中文
+
+	m, _ := regexp.MatchString("^\\p{Han}+$", r.Form.Get("realname"))
+
+- 英文 "^[a-zA-Z]+$"
+- 电子邮件 `^([\w\.\_]{2,10})@(\w{1,}).([a-z]{2,4})$`
+- 手机号码 `^(1[3|4|5|8][0-9]\d{4,8})$`
+
+### 4.3 预防跨站脚本
+- 验证所有输入
+- 处理所有输出
+
+	func HTMLEscape(w io.Writer, b []byte) //把b进行转义之后写到w
+	func HTMLEscapeString(s string) string //转义s之后返回结果字符串
+	func HTMLEscaper(args ...interface{}) string //支持多个参数一起转义，返回结果字符串
+
+### 4.4 防止重复提交
+
+- 存session中的隐藏字段
+- js 禁用按钮
+
+### 4.5 文件上传
+
+	application/x-www-form-urlencoded   表示在发送前编码所有字符（默认）
+	multipart/form-data	  不对字符编码。在使用包含文件上传控件的表单时，必须使用该值。
+	text/plain	  空格转换为 "+" 加号，但不对特殊字符编码。
+
+## 5 数据库（略）
+
+## 6 session和数据存储
+
+每个访客唯一标识 sessionID (存 cookies 或者 url 传递)
+
+	cookie, _ := r.Cookie("username")
+	fmt.Fprint(w, cookie)
+
+	for _, cookie := range r.Cookies() {
+		fmt.Fprint(w, cookie.Name)
+	}
+
+## 7 文本处理
+
+## 8 web 服务 （REST、SOAP）
 
 
 
@@ -310,8 +373,6 @@ runtime 包中有几个处理 goroutine 的函数
 	- docker
 	- sync
 	- chan
-	- select
-	- .type
 	- 反射 reflect
 	- 线程安全
 
