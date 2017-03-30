@@ -366,13 +366,83 @@ runtime 包中有几个处理 goroutine 的函数
 
 
 
+### context 包
+	
+goroutine 之间的信息传递，以及 goroutine 树的控制，终止退出。
+
+异步的终止，比如 http 请求的终止。
+
+	<- ctx.Done() // 使用 select 监听这个消息，决定程序退出。
+
+- 不要把 Context 存在一个结构体当中，显式地传入函数。Context 变量需要作为第一个参数使用
+- context.TODO 替代 nil
+
+
+### GC 
+
+Transaction Oriented Collector (TOC) 
+
+空间换时间，拷贝空间，复制存活对象，删除整块旧空间
+
+- 在编译期就指出很大一部分对象的生命周期
+
+- 分代 GC
+	
+让年轻对象更快更容易回收，降低全局 GC 压力。
+
+### mutex or channel
+	
+建议不用共享内存方式，而是用 chan 通信来共享。
+
+- 使用 sync 包来共享内存，同步加锁
+
+.Mutex 和 .RWMutex （读锁时，可读不可写，其他和互斥锁相同）
+
+sync.Pool
+
+sync.Once
+
+sync.WaitGroup
+
+sync.Cond
+
+
+
+- 使用 chan 来通信
+
+
+### GDB 调试（显示代码以及行号，断点，单步调试）
+
+### golang pprof / linux pref
+
+### sync
+	
+	sync.WaitGroup
+
+
+### 线程安全
+
+	原子性，可见性，多线程操作相同资源
+
+### 死锁
+
+产生死锁四个必要条件
+
+- 互斥条件 			（不可能破坏）
+- 不可抢占条件		（实现困难，降低性能）
+- 占有且申请条件 	（降低性能）
+- 循环等待条件
+
+银行家算法
+
+在实际的操作系统中往往采用死锁的检测与恢复方法来排除死锁（借助外力，交警指挥）
+
+
+
+
 
 ## TODO 
 
-	- GC 
-	- docker
-	- sync
-	- chan
-	- 反射 reflect
-	- 线程安全
+## openstack docker
+
 
