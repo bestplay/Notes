@@ -446,3 +446,19 @@ sync.Cond
 ## openstack docker
 
 
+
+## 其他计算机基础
+
+tcp 三次握手过程
+
+操作系统 内核态 用户态
+
+进程 线程 协程 协程实现方式
+
+select poll epoll
+
+数据库 索引实现方式 B-tree （磁盘 IO 次数，利用预读，一整页）
+
+并发模型 CSP 等等
+
+分页内存管理
