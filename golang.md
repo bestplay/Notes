@@ -13,6 +13,7 @@ new 仅仅分配空间，置零，返回指针
 	new(int)
 
 make 创建 slice map channel，返回值
+(这三个类型，属于隐式引用类型，占用空间少，基本不需要使用指针来传递)
 
 ### array
 	

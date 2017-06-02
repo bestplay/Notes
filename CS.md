@@ -194,7 +194,11 @@ I/O 多路复用 或叫 事件驱动IO（ IO multiplexing）(select, poll, epoll
 异步 I/O
 完成之后，kernel会给用户进程发送一个signal，告诉它read操作完成了
 
-### select poll epoll IO多路复用
+linux 三方开发了 libeio 使用 阻塞 IO 和 线程池 模拟 异步 IO 
+
+(nodejs，它用的libuv库封装了linux下的libeio和libev，libev提供事件驱动，而libeio则提供异步IO，作者都是Marc Lehmann。)
+
+### select poll epoll IO多路复用 (几种轮询技术,实际仍然是阻塞同步)
 
 本质上都是同步I/O，因为他们都需要在读写事件就绪后自己负责进行读写，也就是说这个读写过程是阻塞的
 
