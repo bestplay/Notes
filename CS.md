@@ -184,6 +184,8 @@ goroutine是协作式调度的，如果goroutine会执行很长时间，而且�
 - 信号驱动 I/O（ signal driven IO）
 - 异步 I/O（asynchronous IO）
 
+
+BIO / NIO / AIO /
 blocking IO的特点就是在IO执行的两个阶段都被block了。
 
 nonblocking IO的特点是用户进程需要不断的主动询问kernel数据好了没有。
@@ -197,6 +199,18 @@ I/O 多路复用 或叫 事件驱动IO（ IO multiplexing）(select, poll, epoll
 linux 三方开发了 libeio 使用 阻塞 IO 和 线程池 模拟 异步 IO 
 
 (nodejs，它用的libuv库封装了linux下的libeio和libev，libev提供事件驱动，而libeio则提供异步IO，作者都是Marc Lehmann。)
+
+libuv 为实现跨平台方案，将 IO 分为两类：网络IO 和 disk IO。
+
+网络IO 使用 epoll / kqueue / events ports / IOCP
+
+disk IO 使用 Thread Pool (各操作系统支持好)
+
+### 同步异步阻塞非阻塞
+
+同步异步 即 用户进程 等或不等 IO 结果
+
+阻塞 非阻塞 即 线程是否挂起（不占用CPU）	
 
 ### select poll epoll IO多路复用 (几种轮询技术,实际仍然是阻塞同步)
 

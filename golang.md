@@ -437,3 +437,9 @@ sync.Cond
 
 嵌套过深，使用 panic 便于传递错误。
 
+
+#### 关于 json
+
+- Use json.Decoder if your data is coming from an io.Reader stream, or you need to decode multiple values from a stream of data.
+
+- Use json.Unmarshal if you already have the JSON data in memory.
